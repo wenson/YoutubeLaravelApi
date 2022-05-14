@@ -1,19 +1,29 @@
 <?php
 
-namespace alchemyguy\YoutubeLaravelApi;
+namespace w3ns0n\YoutubeLaravelApi;
 
-use alchemyguy\YoutubeLaravelApi\Auth\AuthService;
+use w3ns0n\YoutubeLaravelApi\Auth\AuthService;
 use Exception;
 
 class ChannelService extends AuthService {
+
+    protected  $setAccessToken;
+    public function __construct($googleToken) {
+        parent::__construct();
+        $this->setAccessToken = $this->setAccessToken($googleToken);
+    }
 	/**
-	 * [channelsListById -gets the channnel details and ]
+	 * [channelsListById -gets the channel details and ]
 	 * @param  $part    [id,snippet,contentDetails,status, statistics, contentOwnerDetails, brandingSettings]
 	 * @param  $params  [array channels id(comma separated ids ) or you can get ('forUsername' => 'GoogleDevelopers')]
 	 * @return          [json object of response]
 	 */
 	public function channelsListById($part, $params) {
 		try {
+
+            if (! $this->setAccessToken) {
+                return false;
+            }
 
 			$params = array_filter($params);
 
@@ -42,10 +52,11 @@ class ChannelService extends AuthService {
 
 	public function getChannelDetails($token) {
 		try {
-			if (!$this->setAccessToken($token)) {
-				return false;
-			}
-			$part = "snippet,contentDetails,statistics,brandingSettings";
+            if (! $this->setAccessToken) {
+                return false;
+            }
+
+            $part = "snippet,contentDetails,statistics,brandingSettings";
 			$params = array('mine' => true);
 			$service = new \Google_Service_YouTube($this->client);
 			$response = $service->channels->listChannels($part, $params);
@@ -82,9 +93,14 @@ class ChannelService extends AuthService {
 	 * @param  $params       ['onBehalfOfContentOwner' => '']
 	 * @return               [boolean ]
 	 */
-	public function updateChannelBrandingSettings($googleToken, $properties, $part, $params) {
+	public function updateChannelBrandingSettings( $properties, $part, $params) {
 		try {
-			$params = array_filter($params);
+            if (! $this->setAccessToken) {
+                return false;
+            }
+
+
+            $params = array_filter($params);
 
 			/**
 			 * [$service description]
@@ -116,8 +132,12 @@ class ChannelService extends AuthService {
 	 */
 	public function subscriptionByChannelId($params, $part = 'snippet') {
 		try {
+            if (! $this->setAccessToken) {
+                return false;
+            }
 
-			$params = array_filter($params);
+
+            $params = array_filter($params);
 
 			$service = new \Google_Service_YouTube($this->client);
 			return $this->parseSubscriptions($params);
@@ -139,7 +159,13 @@ class ChannelService extends AuthService {
 	 * @return [type]            [description]
 	 */
 	public function parseSubscriptions($params) {
-		$channelId = $params['channelId'];
+
+        if (! $this->setAccessToken) {
+            return false;
+        }
+
+
+        $channelId = $params['channelId'];
 		$totalResults = $params['totalResults'];
 		$maxResultsPerPage = 50;
 		if($totalResults < 1){$totalResults = 0;}
@@ -190,13 +216,11 @@ class ChannelService extends AuthService {
 	public function addSubscriptions($properties, $token, $part = 'snippet', $params = []) {
 		try {
 
-			$setAccessToken = $this->setAccessToken($token);
+            if (! $this->setAccessToken) {
+                return false;
+            }
 
-			if (!$setAccessToken) {
-				return false;
-			}
-
-			$service = new \Google_Service_YouTube($this->client);
+            $service = new \Google_Service_YouTube($this->client);
 
 			$params = array_filter($params);
 			$propertyObject = $this->createResource($properties);
@@ -220,13 +244,12 @@ class ChannelService extends AuthService {
 	public function removeSubscription($token, $subscriptionId, $params = []) {
 		try {
 
-			$setAccessToken = $this->setAccessToken($token);
+            if (! $this->setAccessToken) {
+                return false;
+            }
 
-			if (!$setAccessToken) {
-				return false;
-			}
 
-			$service = new \Google_Service_YouTube($this->client);
+            $service = new \Google_Service_YouTube($this->client);
 
 			$params = array_filter($params);
 

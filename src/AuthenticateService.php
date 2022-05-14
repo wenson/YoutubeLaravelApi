@@ -1,8 +1,8 @@
 <?php
 
-namespace alchemyguy\YoutubeLaravelApi;
+namespace w3ns0n\YoutubeLaravelApi;
 
-use alchemyguy\YoutubeLaravelApi\Auth\AuthService;
+use w3ns0n\YoutubeLaravelApi\Auth\AuthService;
 use Carbon\Carbon;
 use Exception;
 

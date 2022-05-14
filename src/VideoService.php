@@ -1,12 +1,17 @@
 <?php
-namespace alchemyguy\YoutubeLaravelApi;
+namespace w3ns0n\YoutubeLaravelApi;
 
-use alchemyguy\YoutubeLaravelApi\Auth\AuthService;
+use w3ns0n\YoutubeLaravelApi\Auth\AuthService;
 use Exception;
 
 class VideoService extends AuthService {
 
-	/**
+    protected  $setAccessToken;
+    public function __construct($googleToken) {
+        parent::__construct();
+        $this->setAccessToken = $this->setAccessToken($googleToken);
+    }
+    /**
 	 * [videosListById description]
 	 * @param  $part   [snippet,contentDetails,id,statistics](comma separated id's if you want to get more than 1 id details)
 	 * @param  $params [regionCode,relevanceLanguage,videoCategoryId, videoDefinition, videoDimension]
@@ -15,7 +20,12 @@ class VideoService extends AuthService {
 	public function videosListById($part, $params) {
 		try {
 
-			$params = array_filter($params);
+
+            if ($this->setAccessToken) {
+                return false;
+            }
+
+            $params = array_filter($params);
 
 			$service = new \Google_Service_YouTube($this->client);
 			return $service->videos->listVideos($part, $params);
@@ -32,15 +42,19 @@ class VideoService extends AuthService {
 	}
 
 	/**
-	 * [searchListByKeyword -get youtube search results by keyoword ]
+	 * [searchListByKeyword -get YouTube search results by keyword ]
 	 * @param  $part   [snippet,id]
 	 * @param  $params ['maxResults','q','type','pageToken']
 	 * @return         [json object or response]
 	 */
 	public function searchListByKeyword($part, $params) {
 		try {
+            if (! $this->setAccessToken) {
+                return false;
+            }
 
-			$params = array_filter($params);
+
+            $params = array_filter($params);
 
 			$service = new \Google_Service_YouTube($this->client);
 			return $service->search->listSearch($part, $params);
@@ -57,15 +71,19 @@ class VideoService extends AuthService {
 	}
 
 	/**
-	 * [relatedToVideoId - gets realted videos to a particular video id]
-	 * @param  $part   [ sinppet, id]
+	 * [relatedToVideoId - gets related videos to a particular video id]
+	 * @param  $part   [ snippet, id]
 	 * @param  $params [ regionCode,relatedToVideoId,relevanceLanguage,videoCategoryId, videoDefinition, videoDimension,	type(video or channel)]
 	 * @return         [json Object of response]
 	 */
 	public function relatedToVideoId($part, $params) {
 		try {
+            if (! $this->setAccessToken) {
+                return false;
+            }
 
-			$params = array_filter($params);
+
+            $params = array_filter($params);
 
 			$service = new \Google_Service_YouTube($this->client);
 			return $service->search->listSearch($part, $params);
@@ -83,29 +101,27 @@ class VideoService extends AuthService {
 
 	/**
 	 * [uploadVideo upload a video to youtube channel]
-	 * @param  $google_token [authorization token for the youtube channel ]
+	 * @param  $google_token [authorization token for the YouTube channel ]
 	 * @param  $videoPath    [path of the video to be uploaded][max video size 128 GB]
 	 * @param  $data         [video details]
 	 * @return               [boolean]
 	 */
-	public function uploadVideo($googleToken, $videoPath, $data) {
+	public function uploadVideo( $videoPath, $data) {
 		try {
 
 			if (!isset($data['title']) || !isset($data['description']) || !isset($data['tags']) || !isset($data['category_id']) || !isset($data['video_status'])) {
-				throw new Exception($e->getMessage(), 1);
+				throw new Exception( $e->getMessage(), 1);
 				return false;
 			}
 
 			/**
 			 * [setAccessToken [setting accent token to client]]
 			 */
-			$setAccessToken = $this->setAccessToken($googleToken);
-			if (!$setAccessToken) {
-				return false;
-			}
-
+            if ($this->setAccessToken) {
+                return false;
+            }
 			/**
-			 * [youtube [instance of Google_Service_YouTube] ]
+			 * [YouTube [instance of Google_Service_YouTube] ]
 			 */
 			$youtube = new \Google_Service_YouTube($this->client);
 
@@ -143,17 +159,17 @@ class VideoService extends AuthService {
 			}
 
 			/**
-			 * Setting the defer flag to true tells the client to return a request which can be called with ->execute(); instead of making the API call immediately
+			 * Setting to defer flag to true tells the client to return a request which can be called with ->execute(); instead of making the API call immediately
 			 */
 			$this->client->setDefer(true);
 
 			/**
-			 * request [API's videos.insert method] [ to create and upload the video]
+			 * request [APIs videos.insert method] [ to create and upload the video]
 			 */
 			$insertRequest = $youtube->videos->insert("status,snippet", $video);
 
 			/**
-			 * MediaFileUpload object [resumable uploads]
+			 * MediaFileUpload object [presumable uploads]
 			 */
 			$media = new \Google_Http_MediaFileUpload(
 				$this->client,
@@ -200,21 +216,20 @@ class VideoService extends AuthService {
 	 * [videosDelete delete a youtube video]
 	 * @param  $google_token [auth token for the channel owning the video]
 	 * @param  $id           [video id]
-	 * @param  $params       [onbelhalf of owner]
+	 * @param  $params       [halftone of owner]
 	 * @return               [json obj response]
 	 */
-	public function deleteVideo($googleToken, $id, $params = []) {
+	public function deleteVideo( $id, $params = []) {
 		try {
 
 			/**
 			 * [setAccessToken [setting accent token to client]]
 			 */
-			$setAccessToken = $this->setAccessToken($googleToken);
-			if (!$setAccessToken) {
-				return false;
-			}
+            if (! $this->setAccessToken) {
+                return false;
+            }
 
-			/**
+            /**
 			 * [$service (instance of Google_Service_YouTube)]
 			 */
 			$params = array_filter($params);
@@ -234,18 +249,18 @@ class VideoService extends AuthService {
 	}
 
 	/*
-	 * [adds like dislike or remove ratiing]
+	 * [adds like dislike or remove rating]
 	 */
-	public function videosRate($googleToken, $id, $rating = 'like', $params = []) {
+	public function videosRate( $id, $rating = 'like', $params = []) {
 
 		try {
 
-			$setAccessToken = $this->setAccessToken($googleToken);
-			if (!$setAccessToken) {
-				return false;
-			}
+            if (! $this->setAccessToken) {
+                return false;
+            }
 
-			$service = new Google_Service_YouTube($client);
+
+            $service = new \Google_Service_YouTube($this->client);
 
 			$params = array_filter($params);
 			$response = $service->videos->rate(
